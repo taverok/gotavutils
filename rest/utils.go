@@ -47,6 +47,15 @@ func Map(r io.Reader, target any) error {
 	return nil
 }
 
+func XAuthToken(r *http.Request) (string, error) {
+	t := r.Header.Get("X-Auth-Token")
+	if t == "" {
+		return "", puberr.ErrNotAuthorized
+	}
+
+	return t, nil
+}
+
 func GetQueryParamString(r *http.Request, name string, required bool) (string, error) {
 	param := r.URL.Query().Get(name)
 	if param == "" && required {
