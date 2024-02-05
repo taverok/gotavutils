@@ -1,50 +1,38 @@
 package rest
 
 import (
-	"database/sql"
 	"encoding/json"
-	"errors"
+	"fmt"
 	"log/slog"
 	"net/http"
+
+	"github.com/taverok/gotavutils/rest/puberr"
 )
 
-type handler func(w http.ResponseWriter, r *http.Request) error
-
-// Do is middleware that brings common app logic, headers, error handling
-func Do(h handler) http.HandlerFunc {
+func Json[T any](f func(w http.ResponseWriter, r *http.Request) (T, error)) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Content-Type", "application/json")
-
-		err := h(w, r)
-		if err == nil {
+		body, err := f(w, r)
+		if err != nil {
+			handleError(w, err)
 			return
 		}
 
-		HandleError(w, err)
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
+
+		err = json.NewEncoder(w).Encode(body)
+		if err != nil {
+			slog.Error(fmt.Sprintf("%v", err))
+		}
 	}
 }
 
-type ErrorResponse struct {
-	Error string `json:"error"`
-}
+func handleError(w http.ResponseWriter, err error) {
+	pubErr := puberr.Parse(err)
 
-func HandleError(w http.ResponseWriter, err error) {
-	pubError := toPublicError(err)
-	w.WriteHeader(pubError.HTTPCode)
-	_ = json.NewEncoder(w).Encode(ErrorResponse{Error: pubError.Error()})
-
-	slog.Error(pubError.PublicError(), "err", err)
-}
-
-func toPublicError(err error) *PublicError {
-	appErr, ok := err.(*PublicError)
-	if ok {
-		return appErr
+	w.WriteHeader(pubErr.HTTPCode)
+	err = json.NewEncoder(w).Encode(pubErr)
+	if err != nil {
+		slog.Error(fmt.Sprintf("%v", err))
 	}
-
-	if errors.Is(err, sql.ErrNoRows) {
-		return ErrNotFound
-	}
-
-	return ErrGeneric
 }

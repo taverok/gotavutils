@@ -1,4 +1,4 @@
-package sliceutl
+package typeutl
 
 import (
 	"testing"

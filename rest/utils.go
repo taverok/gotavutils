@@ -11,11 +11,12 @@ import (
 
 	"github.com/go-playground/mold/v4/modifiers"
 	"github.com/go-playground/validator/v10"
+	"github.com/taverok/gotavutils/rest/puberr"
 )
 
 var (
-	Modifier  = modifiers.New()
-	Validator = validator.New()
+	modifier = modifiers.New()
+	validate = validator.New()
 
 	errSyntax    *json.SyntaxError
 	errUnmarshal *json.UnmarshalTypeError
@@ -26,24 +27,21 @@ func Map(r io.Reader, target any) error {
 	if err != nil {
 		switch {
 		case errors.As(err, &errSyntax), errors.Is(err, io.ErrUnexpectedEOF), errors.Is(err, io.EOF):
-			return NewError(err, err.Error())
+			return puberr.NewClientError(err.Error()).SetCause(err)
 		case errors.As(err, &errUnmarshal):
-			return NewError(err, fmt.Sprintf(
-				"incorrect JSON type for field %q at %d",
-				errUnmarshal.Field,
-				errUnmarshal.Offset,
-			))
+			msg := fmt.Sprintf("incorrect JSON type for field %q at %d", errUnmarshal.Field, errUnmarshal.Offset)
+			return puberr.NewClientError(msg).SetCause(err)
 		default:
-			return ErrGeneric
+			return puberr.ErrGeneric
 		}
 	}
 
-	if err = Modifier.Struct(context.Background(), target); err != nil {
-		return NewError(nil, err.Error())
+	if err = modifier.Struct(context.Background(), target); err != nil {
+		return puberr.NewClientError(err.Error())
 	}
 
-	if err = Validator.Struct(target); err != nil {
-		return NewError(nil, err.Error())
+	if err = validate.Struct(target); err != nil {
+		return puberr.NewClientError(err.Error())
 	}
 
 	return nil
@@ -52,7 +50,7 @@ func Map(r io.Reader, target any) error {
 func GetQueryParamString(r *http.Request, name string, required bool) (string, error) {
 	param := r.URL.Query().Get(name)
 	if param == "" && required {
-		return "", NewError(nil, fmt.Sprintf("expected query param %s not found", name))
+		return "", puberr.NewClientError(fmt.Sprintf("expected query param %s not found", name))
 	}
 
 	return param, nil

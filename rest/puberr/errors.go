@@ -1,4 +1,4 @@
-package rest
+package puberr
 
 import (
 	"database/sql"
@@ -9,45 +9,45 @@ import (
 )
 
 var (
-	ErrGeneric          = NewError("error occurred")
-	ErrNotImplemented   = NewError("not implemented")
-	ErrExists           = NewError("already exists")
-	ErrNoElements       = NewError("no more elements")
-	ErrNotAuthorized    = NewError("not authorized").SetHTTPCode(http.StatusUnauthorized)
-	ErrForbidden        = NewError("forbidden").SetHTTPCode(http.StatusForbidden)
-	ErrNotFound         = NewError("not found").SetHTTPCode(http.StatusNotFound)
-	ErrResourceNotFound = NewError("resource not found").SetHTTPCode(http.StatusNotFound)
-	ErrInvalidParams    = NewError("invalid params")
-	ErrInternal         = NewError("internal error").SetHTTPCode(http.StatusInternalServerError)
-	ErrNotOwnedResource = NewError("this resource is not owned by this author")
-	ErrInvalidRequest   = NewError("request format is not valid")
-	ErrAuth             = NewError("wrong password or email")
+	ErrGeneric          = NewClientError("error occurred")
+	ErrNotImplemented   = NewClientError("not implemented")
+	ErrExists           = NewClientError("already exists")
+	ErrNoElements       = NewClientError("no more elements")
+	ErrNotAuthorized    = NewClientError("not authorized").SetHTTPCode(http.StatusUnauthorized)
+	ErrForbidden        = NewClientError("forbidden").SetHTTPCode(http.StatusForbidden)
+	ErrNotFound         = NewClientError("not found").SetHTTPCode(http.StatusNotFound)
+	ErrResourceNotFound = NewClientError("resource not found").SetHTTPCode(http.StatusNotFound)
+	ErrInvalidParams    = NewClientError("invalid params")
+	ErrInternal         = NewClientError("internal error").SetHTTPCode(http.StatusInternalServerError)
+	ErrNotOwnedResource = NewClientError("this resource is not owned by this author")
+	ErrInvalidRequest   = NewClientError("request format is not valid")
+	ErrAuth             = NewClientError("wrong password or email")
 )
 
-type PublicError struct {
+type Error struct {
 	Cause     error
 	PublicMsg string
 	HTTPCode  int
 }
 
-func NewError(publicMsg string) *PublicError {
-	return &PublicError{
-		PublicMsg: publicMsg,
+func NewClientError(msg string) *Error {
+	return &Error{
+		PublicMsg: msg,
 		HTTPCode:  http.StatusBadRequest,
 	}
 }
 
-func (it *PublicError) SetHTTPCode(code int) *PublicError {
+func (it Error) SetHTTPCode(code int) Error {
 	it.HTTPCode = code
 	return it
 }
 
-func (it *PublicError) SetCause(cause error) *PublicError {
+func (it Error) SetCause(cause error) Error {
 	it.Cause = cause
 	return it
 }
 
-func (it *PublicError) Error() string {
+func (it Error) Error() string {
 	if it.Cause != nil {
 		return it.Cause.Error()
 	}
@@ -55,19 +55,19 @@ func (it *PublicError) Error() string {
 	return it.PublicMsg
 }
 
-func (it *PublicError) Unwrap() error {
+func (it Error) Unwrap() error {
 	return it.Cause
 }
 
-func (it *PublicError) PublicError() string {
+func (it Error) PublicError() string {
 	return it.PublicMsg
 }
 
-func Parse(err error) *PublicError {
-	var appErr *PublicError
+func Parse(err error) Error {
+	var appErr *Error
 	ok := errors.As(err, &appErr)
 	if ok {
-		return appErr
+		return *appErr
 	}
 
 	if errors.Is(err, sql.ErrNoRows) {
@@ -75,7 +75,7 @@ func Parse(err error) *PublicError {
 	}
 
 	slog.Error(fmt.Sprintf("%v", err))
-	return NewError("generic error").
+	return NewClientError("generic error").
 		SetHTTPCode(http.StatusInternalServerError).
 		SetCause(err)
 }

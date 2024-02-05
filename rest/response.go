@@ -3,6 +3,8 @@ package rest
 import (
 	"encoding/json"
 	"net/http"
+
+	"github.com/taverok/gotavutils/rest/puberr"
 )
 
 func OK(w http.ResponseWriter, body any) error {
@@ -36,4 +38,14 @@ func Accepted(w http.ResponseWriter) error {
 	}
 
 	return err
+}
+
+type ErrorResponse struct {
+	Error string `json:"error"`
+}
+
+func HandleError(w http.ResponseWriter, err error) {
+	pubError := puberr.Parse(err)
+	w.WriteHeader(pubError.HTTPCode)
+	_ = json.NewEncoder(w).Encode(ErrorResponse{Error: pubError.Error()})
 }

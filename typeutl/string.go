@@ -1,8 +1,8 @@
-package utils
+package typeutl
 
 import "fmt"
 
-func AnyToStr(v interface{}) string {
+func AnyToStr(v any) string {
 	switch v := v.(type) {
 	case string:
 		return v

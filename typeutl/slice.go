@@ -1,4 +1,4 @@
-package sliceutl
+package typeutl
 
 func Intersect[T comparable](a, b []T) []T {
 	aMap := make(map[T]bool)
