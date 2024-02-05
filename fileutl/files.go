@@ -1,4 +1,4 @@
-package utils
+package fileutl
 
 import (
 	"os"
@@ -6,7 +6,7 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-func ReadYmlFile(file string, target any) error {
+func MapYml(file string, target any) error {
 	content, err := os.ReadFile(file)
 	if err != nil {
 		return err
