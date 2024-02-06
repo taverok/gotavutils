@@ -25,8 +25,8 @@ var (
 )
 
 type Error struct {
-	Cause     error
-	PublicMsg string
+	Cause     error  `json:"-"`
+	PublicMsg string `json:"error"`
 	HTTPCode  int
 }
 
