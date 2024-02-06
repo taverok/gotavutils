@@ -64,10 +64,16 @@ func (it Error) PublicError() string {
 }
 
 func Parse(err error) Error {
-	var appErr *Error
-	ok := errors.As(err, &appErr)
+	var appErrP *Error
+	ok := errors.As(err, &appErrP)
 	if ok {
-		return *appErr
+		return *appErrP
+	}
+
+	var appErr Error
+	ok = errors.As(err, &appErr)
+	if ok {
+		return appErr
 	}
 
 	if errors.Is(err, sql.ErrNoRows) {
