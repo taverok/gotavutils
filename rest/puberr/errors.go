@@ -74,7 +74,7 @@ func Parse(err error) Error {
 		return ErrNotFound
 	}
 
-	slog.Error(fmt.Sprintf("%v", err))
+	slog.Error(fmt.Sprintf("%+v", err))
 	return NewClientError("generic error").
 		SetHTTPCode(http.StatusInternalServerError).
 		SetCause(err)

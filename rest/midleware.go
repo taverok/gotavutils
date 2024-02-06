@@ -23,7 +23,7 @@ func Json[T any](f func(w http.ResponseWriter, r *http.Request) (T, error)) http
 
 		err = json.NewEncoder(w).Encode(body)
 		if err != nil {
-			slog.Error(fmt.Sprintf("%v", err))
+			slog.Error(fmt.Sprintf("%+v", err))
 		}
 	}
 }
@@ -34,6 +34,6 @@ func handleError(w http.ResponseWriter, err error) {
 	w.WriteHeader(pubErr.HTTPCode)
 	err = json.NewEncoder(w).Encode(pubErr)
 	if err != nil {
-		slog.Error(fmt.Sprintf("%v", err))
+		slog.Error(fmt.Sprintf("%+v", err))
 	}
 }
