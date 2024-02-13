@@ -26,8 +26,9 @@ var (
 
 type Error struct {
 	Cause     error  `json:"-"`
-	PublicMsg string `json:"error"`
-	HTTPCode  int
+	PublicMsg string `json:"error,omitempty"`
+	ErrCode   *int   `json:"errCode,omitempty"`
+	HTTPCode  int    `json:"-"`
 }
 
 func NewClientError(msg string) *Error {
@@ -39,6 +40,11 @@ func NewClientError(msg string) *Error {
 
 func (it Error) SetHTTPCode(code int) Error {
 	it.HTTPCode = code
+	return it
+}
+
+func (it Error) SetCode(code int) Error {
+	it.ErrCode = &code
 	return it
 }
 
