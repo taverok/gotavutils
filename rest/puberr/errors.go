@@ -31,8 +31,8 @@ type Error struct {
 	HTTPCode  int    `json:"-"`
 }
 
-func NewClientError(msg string) *Error {
-	return &Error{
+func NewClientError(msg string) Error {
+	return Error{
 		PublicMsg: msg,
 		HTTPCode:  http.StatusBadRequest,
 	}

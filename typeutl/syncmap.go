@@ -13,6 +13,18 @@ func NewSyncMap[K comparable, V any]() SyncMap[K, V] {
 	}
 }
 
+func (it *SyncMap[K, V]) Copy() map[K]V {
+	it.lock.RLock()
+	defer it.lock.RUnlock()
+
+	m := make(map[K]V, len(it.m))
+	for k, v := range it.m {
+		m[k] = v
+	}
+
+	return m
+}
+
 func (it *SyncMap[K, V]) Put(k K, v V) {
 	it.lock.Lock()
 	defer it.lock.Unlock()
