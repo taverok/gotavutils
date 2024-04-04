@@ -26,7 +26,9 @@ func Map(r io.Reader, target any) error {
 	err := json.NewDecoder(r).Decode(target)
 	if err != nil {
 		switch {
-		case errors.As(err, &errSyntax), errors.Is(err, io.ErrUnexpectedEOF), errors.Is(err, io.EOF):
+		case errors.Is(err, io.EOF):
+			return puberr.NewClientError("more content expected").SetCause(err)
+		case errors.As(err, &errSyntax), errors.Is(err, io.ErrUnexpectedEOF):
 			return puberr.NewClientError(err.Error()).SetCause(err)
 		case errors.As(err, &errUnmarshal):
 			msg := fmt.Sprintf("incorrect JSON type for field %q at %d", errUnmarshal.Field, errUnmarshal.Offset)
